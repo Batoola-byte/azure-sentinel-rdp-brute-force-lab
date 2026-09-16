@@ -61,3 +61,40 @@ flowchart LR
 7. Targeted accounts, attack duration, and Windows failure codes were analyzed.
 8. The malicious source was contained using an Azure NSG deny rule.
 9. Post-containment telemetry was reviewed to verify the response.
+
+## Incident Walkthrough
+
+### 1. Brute-Force Detection
+
+Microsoft Sentinel was configured with a custom scheduled analytics rule to detect repeated Windows failed-logon events. The KQL detection grouped authentication failures by source IP and affected host.
+
+![Microsoft Sentinel brute-force detection](Screenshots/01-detection.png)
+
+### 2. Incident Creation
+
+When the detection criteria were met, Microsoft Sentinel generated a **Potential RDP Brute Force Attack** incident for investigation.
+
+![Microsoft Sentinel incident](Screenshots/02-incident.png)
+
+### 3. Incident Investigation
+
+The source was investigated using Windows Security Event telemetry. Event ID **4625** represented failed authentication attempts and was used to determine the volume and pattern of activity.
+
+![Brute-force investigation](Screenshots/03-investigation.png)
+
+### 4. Targeted Account Analysis
+
+The investigation showed repeated authentication attempts against several common local account names, including `Administrator`, `admin`, and `user`.
+
+![Targeted account analysis](Screenshots/04-targeted-accounts.png)
+
+### 5. Windows Failure-Code Analysis
+
+Authentication failure codes were analyzed to better understand why the logons failed.
+
+Observed values included:
+
+- `Status: 0xC000006D` — logon failure / invalid credentials
+- `SubStatus: 0xC0000064` — specified account does not exist
+
+![Windows authentication failure analysis](Screenshots/05-failure-codes.png)
