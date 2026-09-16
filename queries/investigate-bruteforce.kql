@@ -1,0 +1,76 @@
+// Microsoft Sentinel - Brute Force Incident Investigation
+// Queries used to investigate a source IP after a brute-force alert.
+
+// ============================================================
+// 1. Investigate authentication activity from a suspicious IP
+// Replace <SUSPICIOUS_IP> with the IP being investigated.
+// ============================================================
+
+SecurityEvent
+| where IpAddress == "<SUSPICIOUS_IP>"
+| where EventID in (4624, 4625)
+| project
+    TimeGenerated,
+    EventID,
+    Account,
+    IpAddress,
+    LogonType,
+    Computer,
+    Activity
+| sort by TimeGenerated asc
+
+
+// ============================================================
+// 2. Compare successful vs. failed authentication
+// 4624 = Successful logon
+// 4625 = Failed logon
+// ============================================================
+
+SecurityEvent
+| where IpAddress == "<SUSPICIOUS_IP>"
+| where EventID in (4624, 4625)
+| summarize Events=count() by EventID, Activity
+| sort by EventID asc
+
+
+// ============================================================
+// 3. Identify targeted accounts
+// ============================================================
+
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4625
+| where IpAddress == "<SUSPICIOUS_IP>"
+| summarize FailedAttempts=count() by Account
+| sort by FailedAttempts desc
+
+
+// ============================================================
+// 4. Determine attack duration
+// ============================================================
+
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4625
+| where IpAddress == "<SUSPICIOUS_IP>"
+| summarize
+    FailedAttempts=count(),
+    FirstAttempt=min(TimeGenerated),
+    LastAttempt=max(TimeGenerated)
+    by Account
+| extend DurationMinutes =
+    datetime_diff("minute", LastAttempt, FirstAttempt)
+| sort by FailedAttempts desc
+
+
+// ============================================================
+// 5. Analyze Windows authentication failure codes
+// ============================================================
+
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4625
+| where IpAddress == "<SUSPICIOUS_IP>"
+| summarize Attempts=count()
+    by FailureReason, Status, SubStatus
+| sort by Attempts desc
