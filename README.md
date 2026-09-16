@@ -106,3 +106,20 @@ After confirming the brute-force activity, the source was contained at the Azure
 The rule denied inbound TCP traffic to RDP port **3389** from the identified source, preventing further RDP attempts from reaching the virtual machine.
 
 ![Azure NSG containment rule](Screenshots/06-containment.png)
+
+## MITRE ATT&CK Mapping
+
+The observed activity can be mapped to the MITRE ATT&CK framework based on the authentication behavior identified during the investigation.
+
+| Tactic | Technique | ID | Evidence |
+|---|---|---|---|
+| Credential Access | Brute Force: Password Guessing | T1110.001 | More than 1,000 failed authentication attempts were observed against multiple common account names. |
+
+### Why T1110.001?
+
+The source repeatedly attempted authentication against accounts such as
+`Administrator`, `admin`, and `user`.
+
+The high volume of Event ID **4625** failures across these account names is consistent with password-guessing activity.
+
+No successful Event ID **4624** authentication from the investigated source was identified during the reviewed investigation period.
