@@ -98,3 +98,11 @@ Observed values included:
 - `SubStatus: 0xC0000064` — specified account does not exist
 
 ![Windows authentication failure analysis](Screenshots/05-failure-codes.png)
+
+### 6. Containment
+
+After confirming the brute-force activity, the source was contained at the Azure network layer using a Network Security Group (NSG) rule.
+
+The rule denied inbound TCP traffic to RDP port **3389** from the identified source, preventing further RDP attempts from reaching the virtual machine.
+
+![Azure NSG containment rule](Screenshots/06-containment.png)
