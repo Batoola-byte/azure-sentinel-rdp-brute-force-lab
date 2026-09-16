@@ -1,0 +1,14 @@
+// Microsoft Sentinel - Potential RDP Brute Force Detection
+// Detects repeated Windows authentication failures from the same source IP.
+
+SecurityEvent
+| where EventID == 4625
+| where isnotempty(IpAddress)
+| where IpAddress !in ("-", "127.0.0.1", "::1")
+| summarize
+    FailedAttempts = count(),
+    FirstAttempt = min(TimeGenerated),
+    LastAttempt = max(TimeGenerated),
+    Accounts = make_set(Account)
+    by IpAddress, Computer
+| where FailedAttempts >= 20
